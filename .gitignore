@@ -8,3 +8,8 @@ build/
 # IDEA files
 .idea/
 *.iml
+
+LostKng.b
+temp.obj
+code.asm
+out.exe
