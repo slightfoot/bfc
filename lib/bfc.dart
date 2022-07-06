@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:charcode/charcode.dart';
 
 void main(List<String> arguments) {
@@ -10,12 +11,13 @@ void main(List<String> arguments) {
 
   final program = File(arguments[0]).readAsStringSync().codeUnits;
 
-  final cells = List.filled(30000, 0);
+  final cells = Uint16List(30000);
   final stack = Queue<int>();
   int ptr = 0, ip = 0;
 
   while (ip >= 0 && ip < program.length) {
     final instruction = program[ip];
+    // print('${ip.toRadixString(16).padLeft(8)}: ${String.fromCharCode(instruction)}');
     ip++;
     switch (instruction) {
       case $greater_than:
@@ -45,6 +47,9 @@ void main(List<String> arguments) {
         }
         break;
       case $close_bracket:
+        if (stack.isEmpty) {
+          throw 'Unmatched closing bracket';
+        }
         ip = stack.removeLast();
         break;
     }
