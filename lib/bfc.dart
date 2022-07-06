@@ -1,3 +1,69 @@
+import 'dart:collection';
+import 'dart:io';
+import 'package:charcode/charcode.dart';
+
 void main(List<String> arguments) {
-  print('Hello world!');
+  if (arguments.isEmpty) {
+    print('Usage: ${Platform.script} "filename.b"\n');
+    exit(1);
+  }
+
+  final program = File(arguments[0]).readAsStringSync().codeUnits;
+
+  final cells = List.filled(30000, 0);
+  final stack = Queue<int>();
+  int ptr = 0, ip = 0;
+
+  while (ip >= 0 && ip < program.length) {
+    final instruction = program[ip];
+    ip++;
+    switch (instruction) {
+      case $greater_than:
+        ptr++;
+        break;
+      case $less_than:
+        ptr--;
+        break;
+      case $plus:
+        cells[ptr]++;
+        break;
+      case $minus:
+        cells[ptr]--;
+        break;
+      case $fullstop:
+        stdout.writeCharCode(cells[ptr]);
+        break;
+      case $comma:
+        cells[ptr] = stdin.readByteSync();
+        break;
+      case $open_bracket:
+        final value = cells[ptr];
+        if (value != 0) {
+          stack.addLast(ip - 1);
+        } else {
+          ip = findClosingBracket(program, ip - 1);
+        }
+        break;
+      case $close_bracket:
+        ip = stack.removeLast();
+        break;
+    }
+  }
+}
+
+int findClosingBracket(List<int> program, int ip) {
+  int ref = 0, bip = ip;
+  do {
+    final instruction = program[bip];
+    if (instruction == $open_bracket) {
+      ref++;
+    } else if (instruction == $close_bracket) {
+      ref--;
+    }
+    bip++;
+  } while (ref != 0 && bip < program.length);
+  if (bip >= program.length) {
+    throw 'Matching bracket not found for: $ip';
+  }
+  return bip;
 }
