@@ -1,17 +1,40 @@
 import 'dart:collection';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:args/args.dart';
 import 'package:charcode/charcode.dart';
 
 void main(List<String> arguments) {
+  var parser = ArgParser();
+  parser.addOption(
+    'cell-size',
+    abbr: 'c',
+    help: 'Sets the BF cell-size',
+    defaultsTo: '16',
+  );
+
   if (arguments.isEmpty) {
-    print('Usage: ${Platform.script} "filename.b"\n');
+    print('BF Usage: ${Platform.script}\n');
+    print(parser.usage);
+    exit(1);
+  }
+
+  final results = parser.parse(arguments);
+  int cellSize = int.tryParse(results['cell-size']) ?? 0;
+  if (cellSize != 8 && cellSize != 16) {
+    print('cell-size of $cellSize invalid');
     exit(1);
   }
 
   final program = File(arguments[0]).readAsStringSync().codeUnits;
 
-  final cells = Uint16List(30000);
+  late List<int> cells;
+  if (cellSize == 8) {
+    cells = Uint8ClampedList(30000);
+  } else if (cellSize == 16) {
+    cells = Uint16List(30000);
+  }
+
   final stack = Queue<int>();
   int ptr = 0, ip = 0;
 
